@@ -40,6 +40,7 @@ const start = () => {
     });
 };
 
+// viewEmployee fucntion.
 const viewEmployee = () => {
   inquirer.prompt(
     {
@@ -56,6 +57,57 @@ const viewEmployee = () => {
         viewEmpRoles();
       } else if (answer.viewEmployeeOptions === "Employees") {
         viewEmpAll();
+      } else {
+        start();
       }
     })
+};
+
+const nameIdPrompt = () => {
+  inquirer.prompt({
+    name: "nameORid",
+    type: "list",
+    message: "Search by Name or ID?",
+    choices: ["Name", "ID", "Return to Main"],
+  }
+  )
+    .then((answer) => {
+      if (answer.nameORid === "Name") {
+        searchDBName();
+      } else if (answer.nameORid === "ID") {
+        searchDBID();
+      } else {
+        start();
+      }
+    })
+};
+
+// query Mysql for Employee by department
+const viewEmpDepartment = () => {
+  // nameIdPrompt funciton
+
 }
+
+// query MySql for Employee by Role
+// query MySql for ALL Employee sory alphabetical.
+// return to main menu
+
+// addEmpployee fucntion.
+// add Mysql Employee
+// add MySql Role
+// add MySql Department
+// return to main menu
+
+// updateEmpRoles fucntion.
+// query Mysql for Employee
+// display Employee
+// update MySql for Employee Role
+//return to main menu
+
+// deleteEmployee function.
+// prompt choice to search by employee name or ID
+// query Mysql by Name
+// query MySql by ID
+// display Name and ID
+// prompt to confirmat the ID to delete
+// Delete MySql employee by ID typed.
