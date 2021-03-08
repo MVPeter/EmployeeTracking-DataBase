@@ -9,6 +9,7 @@ CREATE TABLE department (
     name varchar(30),
     PRIMARY KEY (id)
 );
+ALTER TABLE department AUTO_INCREMENT=30000;
 
 CREATE TABLE role (
     id INT NOT NULL AUTO_INCREMENT,
@@ -18,6 +19,7 @@ CREATE TABLE role (
     PRIMARY KEY (id),
     FOREIGN KEY (department_id) REFERENCES department(id)
 );
+ALTER TABLE role AUTO_INCREMENT=20000;
 
 CREATE TABLE employee (
     id INT NOT NULL AUTO_INCREMENT,
@@ -29,6 +31,7 @@ CREATE TABLE employee (
     FOREIGN KEY (manager_id) REFERENCES employee(id),
     FOREIGN KEY (role_id) REFERENCES role(id)
 );
+
 
 SELECT * FROM employee;
 

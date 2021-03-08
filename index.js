@@ -17,7 +17,28 @@ connection.connect((err) => {
   startMenu();
 });
 
-const start = () => {
+function viewEmpAll() {
+  connection.query(`SELECT * FROM employee ORDER BY id`, (err, results) => {
+    console.table(results)
+    startMenu()
+  });
+};
+
+function viewEmpDepartment() {
+  connection.query(`SELECT * FROM department ORDER BY id`, (err, results) => {
+    console.table(results)
+    startMenu()
+  });
+};
+
+function viewEmpRoles() {
+  connection.query(`SELECT * FROM role ORDER BY id`, (err, results) => {
+    console.table(results)
+    startMenu()
+  });
+};
+
+const startMenu = () => {
   inquirer.prompt(
     {
       name: "menu",
@@ -58,18 +79,20 @@ const viewEmployee = () => {
       } else if (answer.viewEmployeeOptions === "Employees") {
         viewEmpAll();
       } else {
-        start();
+        startMenu();
       }
     })
 };
 
+// function to prompt for Name or ID search of the Database
 const nameIdPrompt = () => {
-  inquirer.prompt({
-    name: "nameORid",
-    type: "list",
-    message: "Search by Name or ID?",
-    choices: ["Name", "ID", "Return to Main"],
-  }
+  inquirer.prompt(
+    {
+      name: "nameORid",
+      type: "list",
+      message: "Search by Name or ID?",
+      choices: ["Name", "ID", "Return to Main"],
+    }
   )
     .then((answer) => {
       if (answer.nameORid === "Name") {
@@ -77,16 +100,53 @@ const nameIdPrompt = () => {
       } else if (answer.nameORid === "ID") {
         searchDBID();
       } else {
-        start();
+        startMenu();
       }
     })
 };
 
-// query Mysql for Employee by department
-const viewEmpDepartment = () => {
-  // nameIdPrompt funciton
+// funciton to search by name
+const searchNamePrompt = () => {
+  // query MYSql for employees ORDER by last name
+  // connection.query('SELECT * FROM employee ORDER BY last_name', (err, results) => {
+  //   if (err) throw err;
+  inquirer.prompt(
+    {
+      name: "searchName",
+      type: "input",
+      message: "Type in the Last name of the employee you are searching for",
+    }
+  )
+    .then((answer) => {
+      let str = answer.toLowerCase();
+      let Lastname = str.carAt(0).toUpperCase() + str.slice(1);
+
+      connection.query(`SELECT * FROM employee WHERE last_name = ${Lastname} ORDER BY last_name`, (err, results) => {
+        console.table(results)
+
+      })
+    });
+};
+
+//function to return MySql lookup by ID
+
+function lookupemployeeByID(id) {
+  connection.query(`SELECT * FROM employee WHERE id = ${id}`, (err, res) => {
+    if (err) throw err;
+    console.table(res);
+    // return res;
+  })
+}
+
+function returnDepartment(id) {
 
 }
+
+// query Mysql for Employee by department
+// const viewEmpDepartment = () => {
+//   // nameIdPrompt funciton
+
+// }
 
 // query MySql for Employee by Role
 // query MySql for ALL Employee sory alphabetical.
