@@ -1,5 +1,6 @@
 const mysql = require('mysql');
 const inquirer = require('inquirer');
+const Font = require('ascii-art-font')
 
 const connection = mysql.createConnection({
   host: 'localhost',
@@ -12,8 +13,11 @@ const connection = mysql.createConnection({
   database: 'company_employeesDB',
 });
 
+
+
 connection.connect((err) => {
   if (err) throw err;
+  // Font.create("Employee Tracker", style[,close]);
   startMenu();
 });
 
