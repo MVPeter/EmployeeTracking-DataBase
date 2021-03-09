@@ -1,9 +1,12 @@
-DROP DATABASE IF EXISTS company_employeesDB;
+-- Drops the day_planner_db if it already exists --
+DROP DATABASE IF EXISTS employeesDB;
 
-CREATE DATABASE company_employeesDB;
+-- Create the database employeesDB and specified it for use.
+CREATE DATABASE employeesDB;
 
-USE company_employeesDB;
+USE employeesDB;
 
+-- Create the department Table
 CREATE TABLE department (
     id INT NOT NULL AUTO_INCREMENT,
     name varchar(30),
@@ -11,6 +14,7 @@ CREATE TABLE department (
 );
 ALTER TABLE department AUTO_INCREMENT=30000;
 
+-- Create the role Table
 CREATE TABLE role (
     id INT NOT NULL AUTO_INCREMENT,
     title varchar(30),
@@ -21,6 +25,7 @@ CREATE TABLE role (
 );
 ALTER TABLE role AUTO_INCREMENT=20000;
 
+--  Create the employee Table
 CREATE TABLE employee (
     id INT NOT NULL AUTO_INCREMENT,
     first_name varchar(30),

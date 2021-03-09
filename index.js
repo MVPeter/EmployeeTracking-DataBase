@@ -10,7 +10,7 @@ const connection = mysql.createConnection({
   user: 'root',
 
   password: '',
-  database: 'company_employeesDB',
+  database: 'employeesDB',
 });
 
 
@@ -22,21 +22,50 @@ connection.connect((err) => {
 });
 
 function viewEmpAll() {
-  connection.query(`SELECT * FROM employee ORDER BY id`, (err, results) => {
+  connection.query(
+    `SELECT employee.id, employee.first_name, employee.last_name, role.title, department.name
+  FROM employeesdb.employee
+  LEFT JOIN employeesdb.role
+  on employee.role_id = role.id
+  JOIN employeesdb.department
+  on role.department_id = department.id`, (err, results) => {
     console.table(results)
     startMenu()
   });
 };
 
 function viewEmpDepartment() {
-  connection.query(`SELECT * FROM department ORDER BY id`, (err, results) => {
+  connection.query(
+    `SELECT department.name, employee.id, employee.first_name, employee.last_name
+    FROM employeesdb.employee
+    LEFT JOIN employeesdb.role
+    on employee.role_id = role.id
+    JOIN employeesdb.department
+    on role.department_id = department.id
+    ORDER BY department.name`, (err, results) => {
     console.table(results)
     startMenu()
   });
 };
 
 function viewEmpRoles() {
-  connection.query(`SELECT * FROM role ORDER BY id`, (err, results) => {
+  connection.query(
+    `SELECT  role.title, employee.id, employee.first_name, employee.last_name
+    FROM employeesdb.employee
+    LEFT JOIN employeesdb.role
+    on employee.role_id = role.id
+    JOIN employeesdb.department
+    on role.department_id = department.id
+    ORDER BY role.title`, (err, results) => {
+    console.table(results)
+    startMenu()
+  });
+};
+
+// function to deleteEmployee
+function deleteEmployee(id) {
+  connection.query(
+    `SELECT * FROM employeesdb.employeesdb WHERE id = ${id}`, (err, results) => {
     console.table(results)
     startMenu()
   });
@@ -48,7 +77,7 @@ const startMenu = () => {
       name: "menu",
       type: "list",
       message: "Would you like to View, Add, or Update employee information?",
-      choices: ["View", "Add", "Update", "EXIT"],
+      choices: ["View", "Add", "Update", "Delete", "EXIT"],
 
     })
     .then((answer) => {
@@ -58,6 +87,8 @@ const startMenu = () => {
         addEmployee();
       } else if (answer.menu === "Update") {
         updateEmployee();
+      } else if (answer.menu === "Delete") {
+        deleteEmployee();
       } else {
         console.log("Exiting");
         connection.end();
@@ -175,3 +206,6 @@ function returnDepartment(id) {
 // display Name and ID
 // prompt to confirmat the ID to delete
 // Delete MySql employee by ID typed.
+deleteEmployee() {
+  SELECT * FROM employeesdb.employeesdb WHERE id = 
+}
