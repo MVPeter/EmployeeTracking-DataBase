@@ -18,7 +18,7 @@ ALTER TABLE department AUTO_INCREMENT=30000;
 CREATE TABLE role (
     id INT NOT NULL AUTO_INCREMENT,
     title varchar(30),
-    salary decimal,
+    salary decimal(13,2),
     department_id INT,
     PRIMARY KEY (id),
     FOREIGN KEY (department_id) REFERENCES department(id)

@@ -23,42 +23,32 @@ connection.connect((err) => {
 
 function viewEmpAll() {
   connection.query(
-    `SELECT employee.id, employee.first_name, employee.last_name, role.title, department.name
+    `SELECT employee.id, employee.first_name, employee.last_name
   FROM employeesdb.employee
-  LEFT JOIN employeesdb.role
-  on employee.role_id = role.id
-  JOIN employeesdb.department
-  on role.department_id = department.id`, (err, results) => {
-    console.table(results)
-    startMenu()
+  ORDER BY employee.last_name`, (err, results) => {
+    console.table(results);
+    viewEmployee();
   });
 };
 
 function viewEmpDepartment() {
   connection.query(
-    `SELECT department.name, employee.id, employee.first_name, employee.last_name
-    FROM employeesdb.employee
-    LEFT JOIN employeesdb.role
-    on employee.role_id = role.id
-    JOIN employeesdb.department
-    on role.department_id = department.id
-    ORDER BY department.name`, (err, results) => {
-    console.table(results)
-    startMenu()
+    `SELECT department.id, department.name 
+    FROM employeesdb.department
+    ORDER BY department.id`, (err, results) => {
+    console.table(results);
+    viewEmployee();
+
   });
 };
 
 function viewEmpRoles() {
   connection.query(
-    `SELECT  role.title, employee.id, employee.first_name, employee.last_name
-    FROM employeesdb.employee
-    LEFT JOIN employeesdb.role
-    on employee.role_id = role.id
-    JOIN employeesdb.department
-    on role.department_id = department.id
-    ORDER BY role.title`, (err, results) => {
+    `SELECT  role.id, role.title
+    FROM employeesdb.role
+    ORDER BY role.id`, (err, results) => {
     console.table(results)
-    startMenu()
+    viewEmployee()
   });
 };
 
@@ -67,7 +57,7 @@ function deleteEmployee(id) {
   connection.query(
     `SELECT * FROM employeesdb.employeesdb WHERE id = ${id}`, (err, results) => {
       console.table(results)
-      startMenu()
+      // startMenu()
     });
 };
 
@@ -84,7 +74,7 @@ const startMenu = () => {
       if (answer.menu === "View") {
         viewEmployee();
       } else if (answer.menu === "Add") {
-        addEmployee();
+        addMenu();
       } else if (answer.menu === "Update") {
         updateEmployee();
       } else if (answer.menu === "Delete") {
@@ -109,10 +99,13 @@ const viewEmployee = () => {
     .then((answer) => {
       if (answer.viewEmployeeOptions === "Department") {
         viewEmpDepartment();
+
       } else if (answer.viewEmployeeOptions === "Roles") {
         viewEmpRoles();
+
       } else if (answer.viewEmployeeOptions === "Employees") {
         viewEmpAll();
+
       } else {
         startMenu();
       }
@@ -187,7 +180,37 @@ function returnDepartment(id) {
 // query MySql for ALL Employee sory alphabetical.
 // return to main menu
 
-// addEmpployee fucntion.
+function displayRoles() {
+  connection.query('SELECT * FROM employeesdb.role ORDER BY role.id', (err, results) => {
+    if (err) throw err;
+
+  })
+}
+
+// addMenue function
+const addMenu = () => {
+  inquirer.prompt([
+    {
+      name: "addmenuchoice",
+      type: "list",
+      message: "Choose which item you would like to add:",
+      choices: ["Department", "Role", "Employee", "Return to Main"],
+    }
+  ])
+    .then((answer) => {
+      if (answer.addmenuchoice === "Employee") {
+        addEmployee();
+      } else if (answer.addmenuchoice === "Department") {
+        addDepartment();
+      } else if (answer.addmenuchoice === "Role") {
+        addRole();
+      } else {
+        startMenu();
+      }
+    })
+}
+
+// addEmpployee function.
 const addEmployee = () => {
   connection.query('SELECT role.id, role.title FROM employeesdb.role ORDER BY role.id', (err, results) => {
     if (err) throw err;
@@ -209,26 +232,87 @@ const addEmployee = () => {
         message: "Select a role: ",
         choices() {
           const rolesArray = [];
-           results.forEach(({title, id}) => {
+          results.forEach(({ title, id }) => {
             rolesArray.push(id + " Role: " + title);
           });
           return rolesArray;
         },
         filter: function (val) {
-          return val.substring(0,5);
+          return val.substring(0, 5);
         }
       },
-      
+
     ])
       .then((answer) => {
         console.table(answer);
-        
+
         addEmployeeDB(answer.firstName, answer.lastName, answer.chooseRole);
         startMenu();
 
       })
   })
 };
+
+// addDepartment function.
+const addDepartment = () => {
+  inquirer.prompt([
+    {
+      name: "departmentName",
+      type: "input",
+      message: "Please type a new Department Name:  ",
+    }
+
+  ])
+    .then((answer) => {
+      console.table(answer);
+
+      addDepartmentDB(answer.departmentName);
+      addMenu();
+    })
+};
+
+// addRole function.
+const addRole = () => {
+  connection.query('SELECT * FROM department ORDER BY department.id', (err, results) => {
+    if (err) throw err;
+
+    inquirer.prompt([
+      {
+        name: "roleTitle",
+        type: "input",
+        message: "Please type a new role title:  ",
+      },
+      {
+        name: "roleSalary",
+        type: "input",
+        message: "Please type a new salary:  ",
+      },
+      {
+        name: "chooseDept",
+        type: "list",
+        message: "Select the Department: ",
+        choices() {
+          const deptArray = [];
+          results.forEach(({ name, id }) => {
+            deptArray.push(id + " Department: " + name);
+          });
+          return deptArray;
+        },
+        filter: function (val) {
+          return val.substring(0, 5);
+        }
+      },
+
+    ])
+      .then((answer) => {
+        console.table(answer);
+
+        addRoleDB(answer.roleTitle, answer.roleSalary, answer.chooseDept);
+        addMenu();
+      })
+  })
+};
+
 
 // add Mysql Employee
 function addEmployeeDB(first, last, role) {
@@ -240,7 +324,23 @@ function addEmployeeDB(first, last, role) {
 }
 
 // add MySql Role
+function addRoleDB(title, salary, department_id) {
+  connection.query(`INSERT INTO role (title, salary, department_id)
+  VALUES ("${title}", "${salary}", "${department_id}")`, (err, res) => {
+    if (err) throw err;
+    // console.table(res);
+  })
+}
+
+
 // add MySql Department
+function addDepartmentDB(name) {
+  connection.query(`INSERT INTO department (name)
+  VALUES ("${name}")`, (err, res) => {
+    if (err) throw err;
+    // console.table(res);
+  })
+}
 // return to main menu
 
 // updateEmpRoles fucntion.
