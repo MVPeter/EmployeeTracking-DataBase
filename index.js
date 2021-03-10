@@ -66,9 +66,9 @@ function viewEmpRoles() {
 function deleteEmployee(id) {
   connection.query(
     `SELECT * FROM employeesdb.employeesdb WHERE id = ${id}`, (err, results) => {
-    console.table(results)
-    startMenu()
-  });
+      console.table(results)
+      startMenu()
+    });
 };
 
 const startMenu = () => {
@@ -188,7 +188,57 @@ function returnDepartment(id) {
 // return to main menu
 
 // addEmpployee fucntion.
+const addEmployee = () => {
+  connection.query('SELECT role.id, role.title FROM employeesdb.role ORDER BY role.id', (err, results) => {
+    if (err) throw err;
+
+    inquirer.prompt([
+      {
+        name: "firstName",
+        type: "input",
+        message: "Please type the first name:  ",
+      },
+      {
+        name: "lastName",
+        type: "input",
+        message: "Please type the last name:  ",
+      },
+      {
+        name: "chooseRole",
+        type: "list",
+        message: "Select a role: ",
+        choices() {
+          const rolesArray = [];
+           results.forEach(({title, id}) => {
+            rolesArray.push(id + " Role: " + title);
+          });
+          return rolesArray;
+        },
+        filter: function (val) {
+          return val.substring(0,5);
+        }
+      },
+      
+    ])
+      .then((answer) => {
+        console.table(answer);
+        
+        addEmployeeDB(answer.firstName, answer.lastName, answer.chooseRole);
+        startMenu();
+
+      })
+  })
+};
+
 // add Mysql Employee
+function addEmployeeDB(first, last, role) {
+  connection.query(`INSERT INTO employee (first_name, last_name, role_id)
+  VALUES ("${first}", "${last}", "${role}")`, (err, res) => {
+    if (err) throw err;
+    // console.table(res);
+  })
+}
+
 // add MySql Role
 // add MySql Department
 // return to main menu
@@ -201,11 +251,15 @@ function returnDepartment(id) {
 
 // deleteEmployee function.
 // prompt choice to search by employee name or ID
+
 // query Mysql by Name
+
 // query MySql by ID
 // display Name and ID
+
 // prompt to confirmat the ID to delete
+
 // Delete MySql employee by ID typed.
-deleteEmployee() {
-  SELECT * FROM employeesdb.employeesdb WHERE id = 
-}
+// deleteEmployee() {
+//   SELECT * FROM employeesdb.employeesdb WHERE id = 
+// }
