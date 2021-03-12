@@ -1,6 +1,7 @@
 const mysql = require('mysql');
 const inquirer = require('inquirer');
 const Font = require('ascii-art-font')
+const dotenv = require('dotenv').config()
 
 const connection = mysql.createConnection({
   host: 'localhost',
@@ -9,7 +10,7 @@ const connection = mysql.createConnection({
 
   user: 'root',
 
-  password: '',
+  password: process.env.PASSWORD,
   database: 'employeesDB',
 });
 
@@ -31,13 +32,30 @@ function viewEmpAll() {
   });
 };
 
-function viewEmpDepartment() {
+function viewDepartment() {
   connection.query(
     `SELECT department.id, department.name 
     FROM employeesdb.department
     ORDER BY department.id`, (err, results) => {
     console.table(results);
     viewEmployee();
+
+
+  });
+};
+
+function departmentEmp(name) {
+  connection.query(
+    `SELECT department.name, employee.id, employee.first_name, employee.last_name
+    FROM employeesdb.employee
+    LEFT JOIN employeesdb.role
+    on employee.role_id = role.id
+    JOIN employeesdb.department
+    on role.department_id = department.id
+    WHERE department.name = "${name}"`, (err, results) => {
+    console.table(results)
+    viewEmployee();
+
 
   });
 };
@@ -76,7 +94,7 @@ const startMenu = () => {
       } else if (answer.menu === "Add") {
         addMenu();
       } else if (answer.menu === "Update") {
-        updateEmployee();
+        updateMenu();
       } else if (answer.menu === "Delete") {
         deleteEmployee();
       } else {
@@ -88,29 +106,62 @@ const startMenu = () => {
 
 // viewEmployee fucntion.
 const viewEmployee = () => {
+
   inquirer.prompt(
     {
       name: "viewEmployeeOptions",
       type: "list",
-      message: "Select: Department, Roles, or Employees",
-      choices: ["Department", "Roles", "Employees", "Return to Main"],
+      message: "View: Department, Role, All Employees, Department's Employees",
+      choices: ["Department", "Roles", "All Employees", "Department's Employees", "Return to Main"],
     }
   )
     .then((answer) => {
-      if (answer.viewEmployeeOptions === "Department") {
-        viewEmpDepartment();
+      if (answer.viewEmployeeOptions === "Department's Employees") {
+        viewDepartmentEmployee();
 
       } else if (answer.viewEmployeeOptions === "Roles") {
         viewEmpRoles();
 
-      } else if (answer.viewEmployeeOptions === "Employees") {
+      } else if (answer.viewEmployeeOptions === "All Employees") {
         viewEmpAll();
+
+      } else if (answer.viewEmployeeOptions === "Department") {
+        viewDepartment();
 
       } else {
         startMenu();
       }
     })
 };
+
+// viewDepartments employees fucntion.
+const viewDepartmentEmployee = () => {
+  connection.query(
+    `SELECT department.id, department.name 
+    FROM employeesdb.department
+    ORDER BY department.id`, (err, response) => {
+    inquirer.prompt(
+      [
+        {
+          name: "chooseDept",
+          type: "list",
+          message: "Select a Department to view its employees: ",
+          choices() {
+            const rolesArray = [];
+            response.forEach(({ name }) => {
+              rolesArray.push(name);
+            });
+            return rolesArray;
+          },
+        }
+      ],
+    )
+      .then((answer) => {
+        departmentEmp(answer.chooseDept);
+
+      });
+  })
+}
 
 // function to prompt for Name or ID search of the Database
 const nameIdPrompt = () => {
@@ -166,9 +217,7 @@ function lookupemployeeByID(id) {
   })
 }
 
-function returnDepartment(id) {
 
-}
 
 // query Mysql for Employee by department
 // const viewEmpDepartment = () => {
@@ -181,9 +230,9 @@ function returnDepartment(id) {
 // return to main menu
 
 function displayRoles() {
-  connection.query('SELECT * FROM employeesdb.role ORDER BY role.id', (err, results) => {
+  connection.query('SELECT id, title, salary FROM employeesdb.role ORDER BY role.id', (err, results) => {
     if (err) throw err;
-
+    console.table(results)
   })
 }
 
@@ -204,6 +253,29 @@ const addMenu = () => {
         addDepartment();
       } else if (answer.addmenuchoice === "Role") {
         addRole();
+      } else {
+        startMenu();
+      }
+    })
+}
+
+// updateMenue function
+const updateMenu = () => {
+  inquirer.prompt([
+    {
+      name: "updatemenuchoice",
+      type: "list",
+      message: "Choose which item you would like to Update:",
+      choices: ["Department", "Role", "Employee", "Return to Main"],
+    }
+  ])
+    .then((answer) => {
+      if (answer.updatemenuchoice === "Employee") {
+        updateEmployee();
+      } else if (answer.updatemenuchoice === "Department") {
+        updateDepartment();
+      } else if (answer.updatemenuchoice === "Role") {
+        updateRole();
       } else {
         startMenu();
       }
@@ -341,9 +413,60 @@ function addDepartmentDB(name) {
     // console.table(res);
   })
 }
-// return to main menu
 
 // updateEmpRoles fucntion.
+const updateRole = () => {
+  displayRoles()
+  
+  connection.query('SELECT id, name FROM department ORDER by id', (err, results) => {
+    if (err) throw err;
+
+    inquirer.prompt([
+      {
+        name: "roleId",
+        type: "input",
+        message: "Type the ID of the Role you would like to update: "
+      },
+      {
+        name: "roleSalary",
+        type: "input",
+        message: "Please type a new salary:  ",
+      },
+      {
+        name: "chooseDept",
+        type: "list",
+        message: "Select the Department: ",
+        choices() {
+          const deptArray = [];
+          results.forEach(({ name, id }) => {
+            deptArray.push(id + " Department: " + name);
+          });
+          return deptArray;
+        },
+        filter: function (val) {
+          return val.substring(0, 5);
+        }
+      }
+    ])
+      .then((answer) => {
+        // console.table(answer);
+        updateRoleDB(answer.roleId, answer.roleSalary, answer.chooseDept);
+        updateMenu();
+      })
+  })
+};
+
+//UPDATE role db
+function updateRoleDB(id, title, salary, department_id) {
+  connection.query(`UPDATE role 
+  SET salary = "${salary}", department_id = "${department_id}",
+  WHERE id = "${id}"`, (err, res) => {
+    if (err) throw err;
+    // console.table(res);
+  })
+}
+
+
 // query Mysql for Employee
 // display Employee
 // update MySql for Employee Role
