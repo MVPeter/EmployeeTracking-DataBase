@@ -254,7 +254,7 @@ const updateMenu = () => {
       name: "updatemenuchoice",
       type: "list",
       message: "Choose which item you would like to Update:",
-      choices: ["Department", "Role", "Employee", "Return to Main"],
+      choices: ["Role", "Employee", "Return to Main"],
     }
   ])
     .then((answer) => {
