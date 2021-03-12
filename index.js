@@ -32,15 +32,22 @@ function viewEmpAll() {
   });
 };
 
-function viewDepartment() {
+function viewDepartmentAll() {
   connection.query(
     `SELECT department.id, department.name 
     FROM employeesdb.department
     ORDER BY department.id`, (err, results) => {
     console.table(results);
     viewEmployee();
+  });
+};
 
-
+function viewDepartments() {
+  connection.query(
+    `SELECT department.id, department.name 
+    FROM employeesdb.department
+    ORDER BY department.id`, (err, results) => {
+    console.table(results);
   });
 };
 
@@ -79,6 +86,7 @@ function deleteEmployee(id) {
     });
 };
 
+//MAIN MENUE 
 const startMenu = () => {
   inquirer.prompt(
     {
@@ -96,7 +104,7 @@ const startMenu = () => {
       } else if (answer.menu === "Update") {
         updateMenu();
       } else if (answer.menu === "Delete") {
-        deleteEmployee();
+        deleteEmployeeMenu();
       } else {
         console.log("Exiting");
         connection.end();
@@ -126,7 +134,7 @@ const viewEmployee = () => {
         viewEmpAll();
 
       } else if (answer.viewEmployeeOptions === "Department") {
-        viewDepartment();
+        viewDepartmentAll();
 
       } else {
         startMenu();
@@ -164,25 +172,25 @@ const viewDepartmentEmployee = () => {
 }
 
 // function to prompt for Name or ID search of the Database
-const nameIdPrompt = () => {
-  inquirer.prompt(
-    {
-      name: "nameORid",
-      type: "list",
-      message: "Search by Name or ID?",
-      choices: ["Name", "ID", "Return to Main"],
-    }
-  )
-    .then((answer) => {
-      if (answer.nameORid === "Name") {
-        searchDBName();
-      } else if (answer.nameORid === "ID") {
-        searchDBID();
-      } else {
-        startMenu();
-      }
-    })
-};
+// const nameIdPrompt = () => {
+//   inquirer.prompt(
+//     {
+//       name: "nameORid",
+//       type: "list",
+//       message: "Search by Name or ID?",
+//       choices: ["Name", "ID", "Return to Main"],
+//     }
+//   )
+//     .then((answer) => {
+//       if (answer.nameORid === "Name") {
+//         searchDBName();
+//       } else if (answer.nameORid === "ID") {
+//         searchDBID();
+//       } else {
+//         startMenu();
+//       }
+//     })
+// };
 
 // funciton to search by name
 const searchNamePrompt = () => {
@@ -202,33 +210,13 @@ const searchNamePrompt = () => {
 
       connection.query(`SELECT * FROM employee WHERE last_name = ${Lastname} ORDER BY last_name`, (err, results) => {
         console.table(results)
+        updatebyLastName()
 
       })
     });
 };
 
-//function to return MySql lookup by ID
-
-function lookupemployeeByID(id) {
-  connection.query(`SELECT * FROM employee WHERE id = ${id}`, (err, res) => {
-    if (err) throw err;
-    console.table(res);
-    // return res;
-  })
-}
-
-
-
-// query Mysql for Employee by department
-// const viewEmpDepartment = () => {
-//   // nameIdPrompt funciton
-
-// }
-
-// query MySql for Employee by Role
-// query MySql for ALL Employee sory alphabetical.
-// return to main menu
-
+//DISPLAY roles
 function displayRoles() {
   connection.query('SELECT id, title, salary FROM employeesdb.role ORDER BY role.id', (err, results) => {
     if (err) throw err;
@@ -272,8 +260,6 @@ const updateMenu = () => {
     .then((answer) => {
       if (answer.updatemenuchoice === "Employee") {
         updateEmployee();
-      } else if (answer.updatemenuchoice === "Department") {
-        updateDepartment();
       } else if (answer.updatemenuchoice === "Role") {
         updateRole();
       } else {
@@ -319,7 +305,7 @@ const addEmployee = () => {
         console.table(answer);
 
         addEmployeeDB(answer.firstName, answer.lastName, answer.chooseRole);
-        startMenu();
+        addMenu();
 
       })
   })
@@ -417,7 +403,7 @@ function addDepartmentDB(name) {
 // updateEmpRoles fucntion.
 const updateRole = () => {
   displayRoles()
-  
+
   connection.query('SELECT id, name FROM department ORDER by id', (err, results) => {
     if (err) throw err;
 
@@ -456,33 +442,179 @@ const updateRole = () => {
   })
 };
 
-//UPDATE role db
-function updateRoleDB(id, title, salary, department_id) {
+//UPDATE mySQL role db
+function updateRoleDB(id, salary, department_id) {
   connection.query(`UPDATE role 
-  SET salary = "${salary}", department_id = "${department_id}",
+  SET salary = "${salary}", department_id = "${department_id}"
   WHERE id = "${id}"`, (err, res) => {
     if (err) throw err;
     // console.table(res);
   })
 }
 
+// updateDepartment fucntion.
+const updateEmployee = () => {
+  // viewDepartments()
 
-// query Mysql for Employee
-// display Employee
-// update MySql for Employee Role
-//return to main menu
+  connection.query('SELECT id, title FROM role ORDER by id', (err, results) => {
+    if (err) throw err;
 
-// deleteEmployee function.
-// prompt choice to search by employee name or ID
+    inquirer.prompt([
+      {
+        name: "searchBy",
+        type: "list",
+        message: "Select ID to search for an Employee ",
+        choices: ["ID", "Return to Update Menu"]
+      }
+    ])
+      .then((answer) => {
+        if (answer.searchBy === "ID") {
+          updateById()
+        } else if (answer.searchBy === "Last Name") {
+          searchNamePrompt()
 
-// query Mysql by Name
+        } else (updateMenu())
+      })
+  })
+};
 
-// query MySql by ID
-// display Name and ID
+//search by ID update employee
+const updateById = () => {
+  // viewDepartments()
 
-// prompt to confirmat the ID to delete
+  connection.query('SELECT employee.id, first_name, Last_name, role_id, title FROM employee left Join role ON role_id = role.id ORDER by employee.id', (err, results) => {
+    if (err) throw err;
+    console.table(results);
 
-// Delete MySql employee by ID typed.
-// deleteEmployee() {
-//   SELECT * FROM employeesdb.employeesdb WHERE id = 
-// }
+    inquirer.prompt([
+      {
+        name: "empID",
+        type: "input",
+        message: "Type the ID of the employee you want to update: "
+      },
+      {
+        name: "empFirstName",
+        type: "input",
+        message: "First Name: "
+      },
+      {
+        name: "empLastName",
+        type: "input",
+        message: "Last Name: "
+      },
+      {
+        name: "chooseRole",
+        type: "list",
+        message: "Select the role you want update: ",
+        choices() {
+          const deptArray = [];
+          results.forEach(({ role_id, title }) => {
+            deptArray.push(role_id + "   Role: " + title);
+          });
+          return deptArray;
+        },
+        filter: function (val) {
+          return val.substring(0, 5);
+        }
+      }
+    ])
+      .then((answer) => {
+        updateemployeeDB(answer.empID, answer.empFirstName, answer.empLastName, answer.chooseRole);
+
+      })
+  })
+};
+
+// UPDATE MySql emploee db
+function updateemployeeDB(id, first, last, roleid) {
+  connection.query(`UPDATE employee SET first_name = "${first}", last_name = "${last}", role_id = "${roleid}" WHERE id = "${id}"`, (err, res) => {
+    if (err) throw err;
+    // console.table(res);
+  });
+  connection.query(`SELECT * FROM employee WHERE id = "${id}"`, (err, res) => {
+    if (err) throw err;
+    console.table(res);
+    updateMenu();
+  })
+}
+
+//search by Last Name update employee ---------Work in progress
+const updatebyLastName = () => {
+  // viewDepartments()
+
+  connection.query('SELECT employee.id, first_name, Last_name, role_id, title FROM employee left Join role ON role_id = role.id ORDER by employee.id', (err, results) => {
+    if (err) throw err;
+
+    inquirer.prompt([
+      {
+        name: "empID",
+        type: "input",
+        message: "Type the ID of the employee you want to update: "
+      },
+      {
+        name: "empFirstName",
+        type: "input",
+        message: "First Name: "
+      },
+      {
+        name: "empLastName",
+        type: "input",
+        message: "Last Name: "
+      },
+      {
+        name: "chooseRole",
+        type: "list",
+        message: "Select the role you want update: ",
+        choices() {
+          const deptArray = [];
+          results.forEach(({ role_id, title }) => {
+            deptArray.push(role_id + "   Role: " + title);
+          });
+          return deptArray;
+        },
+        filter: function (val) {
+          return val.substring(0, 5);
+        }
+      }
+    ])
+      .then((answer) => {
+        updateemployeeDB(answer.empID, answer.empFirstName, answer.empLastName, answer.chooseRole);
+        updateMenu();
+      })
+  })
+};
+
+//search by ID delete employee
+const deleteEmployeeMenu = () => {
+  // viewDepartments()
+
+  connection.query('SELECT employee.id, first_name, Last_name, role_id, title FROM employee left Join role ON role_id = role.id ORDER by employee.id', (err, results) => {
+    if (err) throw err;
+    console.table(results);
+
+    inquirer.prompt([
+      {
+        name: "empID",
+        type: "input",
+        message: "Type the ID of the employee you want to DELETE: "
+      },
+      {
+        name: "empFirstName",
+        type: "input",
+        message: "Confirm the delete by typing the FIRST Name: "
+      }
+    ])
+      .then((answer) => {
+        deleteEmployeeDB(answer.empID, answer.empFirstName);
+
+      })
+  })
+};
+
+// DELETE MySql emploee db
+function deleteEmployeeDB(id) {
+  connection.query(`DELETE FROM employee WHERE id = "${id}" LIMIT 1`, (err, res) => {
+    if (err) throw err;
+    startMenu();
+  });
+}
